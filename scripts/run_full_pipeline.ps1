@@ -36,8 +36,27 @@ function Invoke-SpotifyIngest {
 
 
 function Invoke-MusicBrainzEnrichment {
-    Write-Host "Running progressive MusicBrainz enrichment for up to 10000 unenriched ISRC values..."
-    python .\scripts\enrich_musicbrainz.py --max-unenriched 10000
+    param(
+        [int]$QueueLimit
+    )
+
+    $exportDir = Join-Path (Resolve-Path .).Path "exports\musicbrainz"
+    $resultsDir = Join-Path $exportDir "results"
+    $queueCsvPath = Join-Path $exportDir "enrichment_queue.csv"
+
+    New-Item -ItemType Directory -Path $exportDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $resultsDir -Force | Out-Null
+
+    dbt run --select stg_musicbrainz_enrichment_queue
+
+    $dbtQueuePath = ($queueCsvPath -replace '\\', '/')
+    $dbtArgs = "{output_path: $dbtQueuePath, max_unenriched: $QueueLimit}"
+    dbt run-operation export_musicbrainz_enrichment_queue --args $dbtArgs
+
+    Write-Host "Running MusicBrainz enrichment using exported queue CSV..."
+    python .\scripts\enrich_musicbrainz.py --input-csv $queueCsvPath --output-dir $resultsDir --max-unenriched $QueueLimit
+
+    python .\scripts\load_musicbrainz_csv_to_duckdb.py --input-dir $resultsDir
 }
 
 
@@ -51,7 +70,7 @@ $env:DBT_PROFILES_DIR = (Resolve-Path .\profiles).Path
 
 $maxAddedAt = Get-MaxAddedAt
 Invoke-SpotifyIngest -TrackLimit $MaxTracks -Cutoff $maxAddedAt
-Invoke-MusicBrainzEnrichment
+Invoke-MusicBrainzEnrichment -QueueLimit $MaxTracks
 Invoke-DbtBuildAndTest
 
 Write-Host "Pipeline complete. Query analytics.mart_playlist_ready_tracks for playlist candidates."

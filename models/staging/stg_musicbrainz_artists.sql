@@ -19,11 +19,14 @@ with recording_latest as (
         json_extract_string(ac.value, '$.artist.type') as artist_type,
         json_extract_string(ac.value, '$.artist.country') as artist_country,
         json_extract_string(ac.value, '$.artist.gender') as artist_gender,
-        try_cast(ac.key as integer) + 1 as credit_order,
+        row_number() over (
+            partition by rl.recording_mbid
+            order by lower(json_extract_string(ac.value, '$.artist.name'))
+        ) as credit_order,
         rl.recording_mbid as source_recording_mbid,
         rl.last_seen_at
     from recording_latest rl
-    left join json_each(json_extract(rl.payload_json, '$."artist-credit"')) ac on true
+    left join unnest(json_extract(rl.payload_json, '$."artist-credit"[*]')) ac(value) on true
     where rl.row_num = 1
 ), ranked as (
     select

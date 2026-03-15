@@ -32,7 +32,7 @@ with recording_latest as (
         rl.recording_mbid as source_recording_mbid,
         rl.last_seen_at
     from recording_latest rl
-    left join json_each(json_extract(rl.payload_json, '$."release-list"')) r on true
+    left join unnest(json_extract(rl.payload_json, '$."release-list"[*]')) r(value) on true
     where rl.row_num = 1
 ), ranked as (
     select

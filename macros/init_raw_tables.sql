@@ -1,5 +1,6 @@
 {% macro init_raw_spotify_tables() %}
   {% if target.type == 'duckdb' %}
+    {% do run_query("load json") %}
     {% do run_query("create schema if not exists raw") %}
 
     {% do run_query("create table if not exists raw.spotify_saved_tracks (track_id varchar, added_at varchar, track_name varchar, isrc varchar, album_id varchar, album_name varchar, album_release_date varchar, album_total_tracks integer, track_number integer, disc_number integer, duration_ms integer, explicit boolean, popularity integer, is_local boolean, primary_artist_id varchar, primary_artist_name varchar, spotify_track_url varchar, ingest_run_at varchar)") %}

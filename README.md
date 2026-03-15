@@ -63,14 +63,24 @@ python scripts/ingest_spotify_library.py --max-tracks 200
 
 ## Enrich with MusicBrainz reference data
 
-After Spotify ingestion populates ISRC values, run:
+The enrichment flow is now decoupled from DuckDB:
+
+1. dbt builds the enrichment queue table.
+2. dbt exports the queue as CSV.
+3. `enrich_musicbrainz.py` reads only CSV and writes CSV outputs.
+4. `load_musicbrainz_csv_to_duckdb.py` loads those outputs into raw DuckDB tables.
+
+Run the steps manually:
 
 ```powershell
-python scripts/enrich_musicbrainz.py --max-unenriched 1000
+dbt run --select stg_musicbrainz_enrichment_queue
+dbt run-operation export_musicbrainz_enrichment_queue --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 1000}'
+python scripts/enrich_musicbrainz.py --input-csv exports/musicbrainz/enrichment_queue.csv --output-dir exports/musicbrainz/results --max-unenriched 1000
+python scripts/load_musicbrainz_csv_to_duckdb.py --input-dir exports/musicbrainz/results
 ```
 
-The script only calls the API for currently unenriched tracks and processes up to
-1000 distinct ISRC values per run by default.
+The enrichment script only calls the API for currently queued tracks and processes
+up to 1000 distinct ISRC values per run by default.
 
 API fallback enrichment also captures recording metadata into
 `raw.musicbrainz_recording_metadata` (genres, style-like tags, and instrument
@@ -88,7 +98,17 @@ Additional MusicBrainz entity tables are also populated during enrichment:
 Optional sampled enrichment:
 
 ```powershell
-python scripts/enrich_musicbrainz.py --max-unenriched 250
+dbt run-operation export_musicbrainz_enrichment_queue --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 250}'
+python scripts/enrich_musicbrainz.py --input-csv exports/musicbrainz/enrichment_queue.csv --output-dir exports/musicbrainz/results --max-unenriched 250
+python scripts/load_musicbrainz_csv_to_duckdb.py --input-dir exports/musicbrainz/results
+```
+
+CSV outputs produced by enrichment:
+
+- `exports/musicbrainz/results/musicbrainz_isrc_candidates.csv`
+- `exports/musicbrainz/results/musicbrainz_recording_payloads.csv`
+- `exports/musicbrainz/results/musicbrainz_work_payloads.csv`
+- `exports/musicbrainz/results/summary.json`
 
 ## Run dbt models
 

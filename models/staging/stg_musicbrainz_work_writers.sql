@@ -16,7 +16,7 @@ with work_latest as (
         wl.last_seen_at,
         rb.value as rel_block_value
     from work_latest wl
-    left join json_each(json_extract(wl.payload_json, '$."relation-list"')) rb on true
+        left join unnest(json_extract(wl.payload_json, '$."relation-list"[*]')) rb(value) on true
     where wl.row_num = 1
       and json_extract_string(rb.value, '$."target-type"') = 'artist'
 ), relations as (
@@ -25,7 +25,7 @@ with work_latest as (
         rb.last_seen_at,
         rel.value as relation_value
     from rel_blocks rb
-    left join json_each(json_extract(rb.rel_block_value, '$.relation')) rel on true
+    left join unnest(json_extract(rb.rel_block_value, '$.relation[*]')) rel(value) on true
 ), filtered as (
     select
         work_mbid,

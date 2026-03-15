@@ -89,9 +89,9 @@ recording_work_links AS (
         ) AS work_mbid
     FROM
         recording_latest rl
-        LEFT JOIN json_each(json_extract(rl.payload_json, '$."relation-list"')) rb
+        LEFT JOIN unnest(json_extract(rl.payload_json, '$."relation-list"[*]')) rb(value)
         ON TRUE
-        LEFT JOIN json_each(json_extract(rb.value, '$.relation')) rel
+        LEFT JOIN unnest(json_extract(rb.value, '$.relation[*]')) rel(value)
         ON TRUE
     WHERE
         rl.row_num = 1
@@ -131,7 +131,7 @@ retry_queue_ranked AS (
         isrc,
         DENSE_RANK() over (
             ORDER BY
-                isr
+                isrc
         ) AS isrc_queue_rank,
         ROW_NUMBER() over (
             PARTITION BY isrc

@@ -10,4 +10,4 @@ dbt_packages/
 dbt_internal_packages/
 .spotify_token_cache.json
 *.duckdb
-/workhouse
+exports/

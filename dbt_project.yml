@@ -20,6 +20,8 @@ on-run-start:
 models:
   music_dbt:
     staging:
+      +pre-hook:
+        - "load json"
       +materialized: view
     marts:
       +materialized: table

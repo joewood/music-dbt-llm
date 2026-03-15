@@ -16,7 +16,7 @@ with recording_latest as (
         json_extract_string(t.value, '$.name') as tag_name,
         coalesce(try_cast(json_extract_string(t.value, '$.count') as integer), 0) as tag_count
     from recording_latest rl
-    left join json_each(json_extract(rl.payload_json, '$."tag-list"')) t on true
+    left join unnest(json_extract(rl.payload_json, '$."tag-list"[*]')) t(value) on true
     where rl.row_num = 1
       and coalesce(trim(json_extract_string(t.value, '$.name')), '') <> ''
 ), ranked_tags as (
@@ -41,12 +41,15 @@ with recording_latest as (
 ), work_links as (
     select
         rl.recording_mbid,
-        try_cast(rel.key as integer) as rel_order,
+        row_number() over (
+            partition by rl.recording_mbid
+            order by lower(json_extract_string(rel.value, '$.work.id'))
+        ) - 1 as rel_order,
         json_extract_string(rel.value, '$.work.id') as work_mbid,
         json_extract_string(rel.value, '$.work.title') as work_title
     from recording_latest rl
-    left join json_each(json_extract(rl.payload_json, '$."relation-list"')) rb on true
-    left join json_each(json_extract(rb.value, '$.relation')) rel on true
+    left join unnest(json_extract(rl.payload_json, '$."relation-list"[*]')) rb(value) on true
+    left join unnest(json_extract(rb.value, '$.relation[*]')) rel(value) on true
     where rl.row_num = 1
       and json_extract_string(rb.value, '$."target-type"') = 'work'
       and coalesce(trim(json_extract_string(rel.value, '$.work.id')), '') <> ''
@@ -71,8 +74,8 @@ with recording_latest as (
         json_extract_string(rel.value, '$.recording.id') as related_recording_mbid,
         json_extract_string(rel.value, '$.recording.title') as related_recording_title
     from recording_latest rl
-    left join json_each(json_extract(rl.payload_json, '$."relation-list"')) rb on true
-    left join json_each(json_extract(rb.value, '$.relation')) rel on true
+    left join unnest(json_extract(rl.payload_json, '$."relation-list"[*]')) rb(value) on true
+    left join unnest(json_extract(rb.value, '$.relation[*]')) rel(value) on true
     where rl.row_num = 1
       and json_extract_string(rb.value, '$."target-type"') = 'recording'
 ), cover_rollup as (
@@ -91,14 +94,17 @@ with recording_latest as (
 ), instruments as (
     select
         rl.recording_mbid,
-        to_json(list(distinct attr.value order by lower(attr.value))) as instrument_list_json
+        to_json(list(distinct instrument_name order by lower(instrument_name))) as instrument_list_json
     from recording_latest rl
-    left join json_each(json_extract(rl.payload_json, '$."relation-list"')) rb on true
-    left join json_each(json_extract(rb.value, '$.relation')) rel on true
-    left join json_each(json_extract(rel.value, '$."attribute-list"')) attr on true
+    left join unnest(json_extract(rl.payload_json, '$."relation-list"[*]')) rb(value) on true
+    left join unnest(json_extract(rb.value, '$.relation[*]')) rel(value) on true
+    left join unnest(json_extract(rel.value, '$."attribute-list"[*]')) attr(attr_value) on true
+    cross join lateral (
+        select json_extract_string(attr.attr_value, '$') as instrument_name
+    ) parsed_attr
     where rl.row_num = 1
       and json_extract_string(rb.value, '$."target-type"') = 'artist'
-      and coalesce(trim(cast(attr.value as varchar)), '') <> ''
+      and coalesce(trim(instrument_name), '') <> ''
     group by 1
 )
 select

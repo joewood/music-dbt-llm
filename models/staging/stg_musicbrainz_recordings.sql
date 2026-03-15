@@ -22,21 +22,18 @@ with ranked as (
         l.recording_mbid,
         string_agg(
             json_extract_string(ac.value, '$.artist.name'),
-            ', ' order by try_cast(ac.key as integer)
+            ', ' order by lower(json_extract_string(ac.value, '$.artist.name'))
         ) as artist_credit_text,
-        max(
-            case when ac.key = '0' then json_extract_string(ac.value, '$.artist.name') end
-        ) as primary_artist_name
+        max(json_extract_string(l.payload_json, '$."artist-credit"[0].artist.name')) as primary_artist_name
     from latest l
-    left join json_each(json_extract(l.payload_json, '$."artist-credit"')) ac on true
+    left join unnest(json_extract(l.payload_json, '$."artist-credit"[*]')) ac(value) on true
     group by 1
 ), first_release as (
     select
         l.recording_mbid,
-        max(case when r.key = '0' then json_extract_string(r.value, '$.title') end) as release_title,
-        max(case when r.key = '0' then try_cast(json_extract_string(r.value, '$.date') as date) end) as release_date
+        max(json_extract_string(l.payload_json, '$."release-list"[0].title')) as release_title,
+        max(try_cast(json_extract_string(l.payload_json, '$."release-list"[0].date') as date)) as release_date
     from latest l
-    left join json_each(json_extract(l.payload_json, '$."release-list"')) r on true
     group by 1
 )
 select
