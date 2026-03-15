@@ -1,0 +1,60 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dbt: debug",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.local\\bin\\dbt.exe",
+      "args": [
+        "debug",
+        "--profiles-dir",
+        "profiles"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: run",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.local\\bin\\dbt.exe",
+      "args": [
+        "run",
+        "--profiles-dir",
+        "profiles"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: test",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.local\\bin\\dbt.exe",
+      "args": [
+        "test",
+        "--profiles-dir",
+        "profiles"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: run + test",
+      "type": "shell",
+      "dependsOn": [
+        "dbt: run",
+        "dbt: test"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}

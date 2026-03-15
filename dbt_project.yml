@@ -1,0 +1,25 @@
+name: music_dbt
+version: 1.0.0
+config-version: 2
+
+profile: music_dbt
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+analysis-paths: ["analyses"]
+
+clean-targets:
+  - target
+  - dbt_packages
+
+on-run-start:
+  - "{{ init_raw_spotify_tables() }}"
+
+models:
+  music_dbt:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

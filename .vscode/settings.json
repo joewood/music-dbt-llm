@@ -1,0 +1,40 @@
+{
+  "dbt.dbtPath": "C:\\Users\\joewo\\.local\\bin\\dbt.exe",
+  "dbt.lspPath": "C:\\Users\\joewo\\AppData\\Roaming\\Code\\User\\globalStorage\\dbtlabsinc.dbt\\bin\\dbt-lsp.exe",
+  "dbt.profileName": "music_dbt",
+  "dbt.targetName": "dev",
+  "dbt.environmentVariables": {
+    "PATH": "C:\\Users\\joewo\\.local\\bin;${env:PATH}"
+  },
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "DuckDB",
+      "database": "${workspaceFolder:music-dbt}/warehouse",
+      "name": "music-dbt"
+    }
+  ],
+  "cSpell.words": [
+    "dbtf",
+    "dotenv",
+    "duckdb",
+    "endmacro",
+    "executemany",
+    "fetchone",
+    "getenv",
+    "ingestions",
+    "isrc",
+    "mbid",
+    "msvc",
+    "musicbrainz",
+    "musicbrainzngs",
+    "pycache",
+    "spotidf",
+    "SPOTILAB",
+    "SPOTIPY",
+    "Upserted",
+    "USERPROFILE",
+    "varchar",
+    "venv"
+  ]
+}

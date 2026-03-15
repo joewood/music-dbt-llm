@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+warehouse/
+logs/
+target/
+dbt_packages/
+.DS_Store
+dbt_internal_packages/
+.spotify_token_cache.json
+*.duckdb
+/workhouse

@@ -1,0 +1,7 @@
+dbt-duckdb==1.9.2
+duckdb==1.2.2
+spotipy==2.25.1
+python-dotenv==1.0.1
+requests
+flask
+musicbrainzngs==0.7.1

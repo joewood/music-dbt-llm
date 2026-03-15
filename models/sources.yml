@@ -1,0 +1,135 @@
+version: 2
+
+sources:
+  - name: spotify_raw
+    schema: raw
+    tables:
+      - name: spotify_saved_tracks
+      - name: spotify_track_artists
+      - name: musicbrainz_recordings
+      - name: spotify_musicbrainz_map
+      - name: musicbrainz_isrc_candidates
+      - name: musicbrainz_recording_payloads
+      - name: musicbrainz_work_payloads
+      - name: musicbrainz_recording_metadata
+      - name: musicbrainz_artists
+      - name: musicbrainz_releases
+      - name: musicbrainz_works
+      - name: musicbrainz_work_writers
+
+models:
+  - name: stg_spotify_saved_tracks
+    description: Cleaned saved-track records from Spotify.
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+      - name: added_at
+        tests: [not_null]
+      - name: isrc
+        description: Spotify-reported ISRC used for reference matching.
+  - name: stg_spotify_musicbrainz_map
+    description: Best MusicBrainz recording candidate for each Spotify track.
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+      - name: recording_mbid
+        description: Matched MusicBrainz recording identifier.
+  - name: stg_musicbrainz_enrichment_queue
+    description: Tracks requiring enrichment because mapping or metadata is missing.
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+      - name: isrc
+        tests: [not_null]
+  - name: stg_musicbrainz_recordings
+    description: Latest snapshot per MusicBrainz recording MBID.
+    columns:
+      - name: recording_mbid
+        tests: [not_null, unique]
+  - name: stg_musicbrainz_recording_metadata
+    description: API-derived recording metadata including genres, styles, and instrument hints.
+    columns:
+      - name: recording_mbid
+        tests: [not_null]
+      - name: top_genre
+        description: Most-voted MusicBrainz genre for the recording.
+      - name: top_style
+        description: Most-voted tag not already in genre list.
+      - name: instrument_list_json
+        description: JSON array of performer relation attributes treated as instrument hints.
+      - name: primary_work_mbid
+        description: Linked compositional work MBID when available.
+      - name: work_writer_list_json
+        description: JSON array of writer/composer/lyricist names from work relations.
+      - name: is_cover
+        description: True when the matched recording is marked as a cover of another recording.
+  - name: stg_musicbrainz_artists
+    description: Artist entities seen on matched MusicBrainz recordings.
+    columns:
+      - name: artist_mbid
+        tests: [not_null]
+      - name: artist_name
+        description: MusicBrainz artist display name.
+  - name: stg_musicbrainz_releases
+    description: Release entities (album/single/EP/etc.) linked to matched recordings.
+    columns:
+      - name: release_mbid
+        tests: [not_null]
+      - name: release_group_primary_type
+        description: Primary release-group type, such as Album or Single.
+  - name: stg_musicbrainz_works
+    description: Composition/work entities related to matched recordings.
+    columns:
+      - name: work_mbid
+        tests: [not_null]
+      - name: work_title
+        description: Work/composition title.
+  - name: stg_musicbrainz_work_writers
+    description: Writer/composer/lyricist relationships for MusicBrainz works.
+    columns:
+      - name: work_mbid
+        tests: [not_null]
+      - name: writer_role
+        description: Relationship type (writer, composer, lyricist, librettist).
+  - name: mart_playlist_ready_tracks
+    description: Playlist-focused track scoring and denormalized artist information.
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+      - name: updated_at
+        tests: [not_null]
+        description: Latest timestamp across Spotify ingest and MusicBrainz map/recording/metadata updates.
+      - name: top_genre
+        description: Primary MusicBrainz genre for the matched recording.
+      - name: top_style
+        description: Primary style-like tag for the matched recording.
+      - name: instrument_list_json
+        description: JSON array of instrument/performance hints from MusicBrainz relations.
+      - name: primary_work_mbid
+        description: Linked compositional work MBID.
+      - name: is_cover
+        description: Whether this recording is tagged as a cover in MusicBrainz relations.
+      - name: work_writer_list_json
+        description: JSON array of songwriters/composers from MusicBrainz work relations.
+      - name: playlist_fit_score
+        description: Heuristic score to help ranking for playlist generation.
+  - name: mart_playlist_entity_context
+    description: One-row-per-track entity context for auto-playlist generation with release-type and songwriter metadata.
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+      - name: updated_at
+        tests: [not_null]
+        description: Latest timestamp across Spotify and MusicBrainz entity updates.
+      - name: release_group_types
+        description: Comma-separated MusicBrainz release-group types linked to the recording.
+      - name: has_single_release
+        description: True if the recording is linked to any Single release-group type.
+      - name: has_album_release
+        description: True if the recording is linked to any Album release-group type.
+      - name: writer_names
+        description: Aggregated writer/composer/lyricist names from the linked work.
+      - name: is_cover
+        description: Whether the recording is a cover according to MusicBrainz recording relations.
+      - name: auto_playlist_score
+        description: Ranking score tuned for auto playlist generation.
