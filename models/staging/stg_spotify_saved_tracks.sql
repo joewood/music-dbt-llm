@@ -1,4 +1,5 @@
 select
+    track_id as id,
     track_id,
     cast(added_at as timestamp) as added_at,
     track_name,

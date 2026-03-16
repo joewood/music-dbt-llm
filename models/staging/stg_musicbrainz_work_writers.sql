@@ -49,6 +49,7 @@ with work_latest as (
       and coalesce(trim(artist_mbid), '') <> ''
 )
 select
+    concat(work_mbid, ':', artist_mbid, ':', writer_role) as id,
     work_mbid,
     artist_mbid,
     artist_name,

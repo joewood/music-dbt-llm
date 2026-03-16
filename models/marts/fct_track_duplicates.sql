@@ -1,5 +1,12 @@
+{{
+    config(
+        materialized='table'
+    )
+}}
+
 with final as (
     select 
+        isrc as id,
         isrc,
         array_agg(album_name order by added_at desc) as album_names,
         array_agg(album_release_date order by added_at desc) as album_release_dates,

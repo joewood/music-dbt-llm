@@ -60,13 +60,6 @@ with recording_latest as (
         max(case when rel_order = 0 then work_title end) as primary_work_title
     from work_links
     group by 1
-), writer_rollup as (
-    select
-        work_mbid,
-        to_json(list(distinct artist_name order by lower(artist_name))) as work_writer_list_json
-    from {{ ref('stg_musicbrainz_work_writers') }}
-    where coalesce(trim(artist_name), '') <> ''
-    group by 1
 ), cover_relations as (
     select
         rl.recording_mbid,
@@ -91,23 +84,55 @@ with recording_latest as (
         ) as covered_by_recordings_json
     from cover_relations
     group by 1
-), instruments as (
+), artist_relations as (
+    -- Support both MusicBrainz payload shapes:
+    -- 1) artist-relation-list[*] (current)
+    -- 2) relation-list[*].relation[*] with target-type='artist' (legacy)
     select
         rl.recording_mbid,
-        to_json(list(distinct instrument_name order by lower(instrument_name))) as instrument_list_json
+        rel.value as relation_value
+    from recording_latest rl
+    left join unnest(json_extract(rl.payload_json, '$."artist-relation-list"[*]')) rel(value) on true
+    where rl.row_num = 1
+
+    union all
+
+    select
+        rl.recording_mbid,
+        rel.value as relation_value
     from recording_latest rl
     left join unnest(json_extract(rl.payload_json, '$."relation-list"[*]')) rb(value) on true
     left join unnest(json_extract(rb.value, '$.relation[*]')) rel(value) on true
-    left join unnest(json_extract(rel.value, '$."attribute-list"[*]')) attr(attr_value) on true
-    cross join lateral (
-        select json_extract_string(attr.attr_value, '$') as instrument_name
-    ) parsed_attr
     where rl.row_num = 1
       and json_extract_string(rb.value, '$."target-type"') = 'artist'
-      and coalesce(trim(instrument_name), '') <> ''
+), instruments as (
+    select
+        ar.recording_mbid,
+        to_json(list(distinct instrument_name order by lower(instrument_name))) as instrument_list_json
+    from artist_relations ar
+    left join unnest(
+        coalesce(
+            json_extract(ar.relation_value, '$."attribute-list"[*]'),
+            json_extract(ar.relation_value, '$.attributes[*]')
+        )
+    ) attr(attr_value) on true
+    cross join lateral (
+        select
+            coalesce(
+                json_extract_string(attr.attr_value, '$'),
+                json_extract_string(attr.attr_value, '$.attribute')
+            ) as instrument_name
+    ) parsed_attr
+    where coalesce(trim(instrument_name), '') <> ''
+      and (
+          lower(coalesce(json_extract_string(ar.relation_value, '$.type'), '')) = 'instrument'
+          or json_extract(ar.relation_value, '$."attribute-list"') is not null
+          or json_extract(ar.relation_value, '$.attributes') is not null
+      )
     group by 1
 )
 select
+    rl.recording_mbid as id,
     rl.recording_mbid,
     tr.top_genre,
     tr.top_style,
@@ -116,7 +141,6 @@ select
     coalesce(i.instrument_list_json, to_json(json('[]'))) as instrument_list_json,
     pw.primary_work_mbid,
     pw.primary_work_title,
-    wr.work_writer_list_json,
     coalesce(cr.is_cover, false) as is_cover,
     cr.cover_of_recording_mbid,
     cr.cover_of_recording_title,
@@ -129,8 +153,6 @@ left join tag_rollup tr
     on rl.recording_mbid = tr.recording_mbid
 left join primary_work pw
     on rl.recording_mbid = pw.recording_mbid
-left join writer_rollup wr
-    on pw.primary_work_mbid = wr.work_mbid
 left join cover_rollup cr
     on rl.recording_mbid = cr.recording_mbid
 left join instruments i

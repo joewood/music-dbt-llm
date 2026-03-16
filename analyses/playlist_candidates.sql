@@ -6,7 +6,7 @@ with ranked as (
             partition by split_part(artist_names, ', ', 1)
             order by playlist_fit_score desc, popularity desc
         ) as artist_rank
-    from {{ ref('mart_playlist_ready_tracks') }}
+    from {{ ref('fct_playlist_ready_tracks') }}
     where is_local = false
 )
 select
@@ -20,4 +20,3 @@ select
 from ranked
 where artist_rank <= 3
 order by playlist_fit_score desc
-limit 200;

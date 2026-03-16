@@ -15,6 +15,7 @@ with ranked as (
     from {{ source('spotify_raw', 'musicbrainz_isrc_candidates') }}
 )
 select
+    track_id as id,
     track_id,
     isrc,
     recording_mbid,

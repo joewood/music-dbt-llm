@@ -45,6 +45,7 @@ with recording_latest as (
     where coalesce(trim(release_mbid), '') <> ''
 )
 select
+    concat(release_mbid, ':', source_recording_mbid) as id,
     release_mbid,
     release_title,
     release_date,

@@ -27,6 +27,15 @@ models:
         tests: [not_null]
       - name: isrc
         description: Spotify-reported ISRC used for reference matching.
+  - name: stg_spotify_track_artists
+    description: Cleaned Spotify track-to-artist attribution records.
+    columns:
+      - name: id
+        tests: [not_null, unique]
+      - name: track_id
+        tests: [not_null]
+      - name: artist_id
+        tests: [not_null]
   - name: stg_spotify_musicbrainz_map
     description: Best MusicBrainz recording candidate for each Spotify track.
     columns:
@@ -59,10 +68,22 @@ models:
         description: JSON array of performer relation attributes treated as instrument hints.
       - name: primary_work_mbid
         description: Linked compositional work MBID when available.
-      - name: work_writer_list_json
-        description: JSON array of writer/composer/lyricist names from work relations.
       - name: is_cover
         description: True when the matched recording is marked as a cover of another recording.
+  - name: int_playlist_ready_tracks_base
+    description: Enriched playlist-ready dataset assembled from staging models.
+    columns:
+      - name: id
+        tests: [not_null, unique]
+      - name: track_id
+        tests: [not_null]
+  - name: int_playlist_entity_context_base
+    description: Enriched playlist entity context with release and writer rollups.
+    columns:
+      - name: id
+        tests: [not_null, unique]
+      - name: track_id
+        tests: [not_null]
   - name: stg_musicbrainz_artists
     description: Artist entities seen on matched MusicBrainz recordings.
     columns:
@@ -91,9 +112,11 @@ models:
         tests: [not_null]
       - name: writer_role
         description: Relationship type (writer, composer, lyricist, librettist).
-  - name: mart_playlist_ready_tracks
-    description: Playlist-focused track scoring and denormalized artist information.
+  - name: fct_playlist_ready_tracks
+    description: Fact output for playlist-focused track scoring and denormalized artist information.
     columns:
+      - name: id
+        tests: [not_null, unique]
       - name: track_id
         tests: [not_null, unique]
       - name: updated_at
@@ -113,9 +136,11 @@ models:
         description: JSON array of songwriters/composers from MusicBrainz work relations.
       - name: playlist_fit_score
         description: Heuristic score to help ranking for playlist generation.
-  - name: mart_playlist_entity_context
-    description: One-row-per-track entity context for auto-playlist generation with release-type and songwriter metadata.
+  - name: fct_playlist_entity_context
+    description: Fact output for one-row-per-track entity context used by auto-playlist generation.
     columns:
+      - name: id
+        tests: [not_null, unique]
       - name: track_id
         tests: [not_null, unique]
       - name: updated_at
@@ -133,3 +158,28 @@ models:
         description: Whether the recording is a cover according to MusicBrainz recording relations.
       - name: auto_playlist_score
         description: Ranking score tuned for auto playlist generation.
+  - name: fct_artist_stats
+    description: Fact output of artist-level statistics derived from staged Spotify data.
+    columns:
+      - name: id
+        tests: [not_null, unique]
+      - name: artist_id
+        tests: [not_null]
+  - name: dim_favorite_artist
+    description: Dimension-style single-row model of the current favorite artist by saved tracks.
+    columns:
+      - name: id
+        tests: [not_null, unique]
+  - name: fct_track_duplicates
+    description: Fact-style diagnostic output for ISRC duplicate groups.
+    columns:
+      - name: id
+        tests: [not_null, unique]
+  - name: int_track_instrument
+    description: Many-to-many mapping between track IDs and normalized instrument names.
+    columns:
+      - name: track_id
+        tests: [not_null]
+      - name: instrument_name
+        tests: [not_null]
+        description: Lower-case instrument name with punctuation and tag-like wrappers removed.

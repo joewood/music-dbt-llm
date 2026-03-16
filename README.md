@@ -11,8 +11,8 @@ A dbt + DuckDB project that ingests your Spotify saved library and prepares play
 - `analytics.stg_spotify_saved_tracks` (dbt staging view): cleaned track fields.
 - `analytics.stg_spotify_musicbrainz_map` (dbt staging view): best MB match per track.
 - `analytics.stg_musicbrainz_recordings` (dbt staging view): latest MB recording snapshot.
-- `analytics.mart_playlist_ready_tracks` (dbt mart table): denormalized artist names and a `playlist_fit_score`.
-- `analytics.mart_artist_stats` (dbt mart table): artist-level stats across your saved tracks.
+- `analytics.fct_playlist_ready_tracks` (dbt mart table): denormalized artist names and a `playlist_fit_score`.
+- `analytics.fct_artist_stats` (dbt mart table): artist-level stats across your saved tracks.
 
 ## Prerequisites
 
@@ -173,7 +173,7 @@ select
   popularity,
   freshness_score,
   playlist_fit_score
-from analytics.mart_playlist_ready_tracks
+from analytics.fct_playlist_ready_tracks
 order by playlist_fit_score desc
 limit 50;
 ```
@@ -190,7 +190,7 @@ select
   release_group_types,
   is_cover,
   auto_playlist_score
-from analytics.mart_playlist_entity_context
+from analytics.fct_playlist_entity_context
 order by auto_playlist_score desc
 limit 50;
 ```
@@ -199,7 +199,7 @@ Most represented artists:
 
 ```sql
 select *
-from analytics.mart_artist_stats
+from analytics.fct_artist_stats
 limit 50;
 ```
 

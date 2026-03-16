@@ -37,6 +37,7 @@ with ranked as (
     group by 1
 )
 select
+    l.recording_mbid as id,
     l.recording_mbid,
     json_extract_string(l.payload_json, '$.title') as mb_recording_title,
     try_cast(json_extract_string(l.payload_json, '$.length') as integer) as mb_length_ms,

@@ -39,6 +39,7 @@ with recording_latest as (
     where coalesce(trim(artist_mbid), '') <> ''
 )
 select
+    concat(artist_mbid, ':', source_recording_mbid, ':', cast(credit_order as varchar)) as id,
     artist_mbid,
     artist_name,
     sort_name,

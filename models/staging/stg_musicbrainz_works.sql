@@ -12,6 +12,7 @@ with ranked as (
     from {{ source('spotify_raw', 'musicbrainz_work_payloads') }}
 )
 select
+    work_mbid as id,
     work_mbid,
     json_extract_string(payload_json, '$.title') as work_title,
     json_extract_string(payload_json, '$.type') as work_type,

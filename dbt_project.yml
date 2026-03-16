@@ -23,5 +23,7 @@ models:
       +pre-hook:
         - "load json"
       +materialized: view
+    refinement:
+      +materialized: table
     marts:
       +materialized: table

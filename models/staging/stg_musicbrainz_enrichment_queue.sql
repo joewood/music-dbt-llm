@@ -166,6 +166,7 @@ queue AS (
         )
 )
 SELECT
+    track_id as id,
     track_id,
     isrc,
     isrc_queue_rank,
