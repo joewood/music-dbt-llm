@@ -7,9 +7,8 @@ Files under `scripts/` are thin CLI wrappers kept for stable command paths.
 
 ## Architecture at a glance
 
-- Bronze (`raw.*`): ingestion and enrichment landing tables populated by Python/dbt operations.
-- Silver staging (`models/staging/stg_*`): source-conformed models; only staging models query `source()`.
-- Silver enrichment/intermediate (`models/refinement/int_*`): joins and enrichment rollups built from staging models.
+- Bronze (`raw.*` + `models/staging/stg_*`): ingestion landing plus staging normalization/unpacking from extracted payloads; only staging models query `source()`.
+- Silver (`models/refinement/int_*`): enrichment joins and rollups built from staging models.
 - Gold marts (`models/marts/fct_*`, `models/marts/dim_*`): final use-case projections for analytics and playlist workflows.
 
 Pipeline boundary for MusicBrainz enrichment:

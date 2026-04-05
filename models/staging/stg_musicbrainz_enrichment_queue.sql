@@ -2,7 +2,7 @@
     static_analysis = 'off',
     tags = ['enrichment_feed'],
     description="""Pipeline role: Enrichment feeder staging model that queues tracks needing MusicBrainz data and is exported to CSV for the Python enrichment process.
-Medallion layer: Silver (staging bridge between Bronze raw data and enrichment execution)."""
+Medallion layer: Bronze (staging bridge between raw ingestion data and enrichment execution)."""
 ) }}
 
 WITH failure_state AS (

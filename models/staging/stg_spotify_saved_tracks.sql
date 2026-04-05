@@ -1,6 +1,6 @@
 {{ config(
     description="""Pipeline role: Staging input that standardizes raw Spotify saved-track records for downstream enrichment joins and mart projections.
-Medallion layer: Silver (staging/conformance over Bronze raw sources)."""
+Medallion layer: Bronze (staging/conformance and unpacking over raw ingestion sources)."""
 ) }}
 
 select

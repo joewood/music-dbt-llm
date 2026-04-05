@@ -1,6 +1,6 @@
 {{ config(
     description="""Pipeline role: Staging input that standardizes Spotify track-to-artist attribution used by intermediate enrichment models and marts.
-Medallion layer: Silver (staging/conformance over Bronze raw sources)."""
+Medallion layer: Bronze (staging/conformance and unpacking over raw ingestion sources)."""
 ) }}
 
 select
