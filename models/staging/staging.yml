@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: stg_spotify_saved_tracks
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+        description: Stable Spotify track identifier.
+      - name: added_at
+        tests: [not_null]
+        description: Timestamp when the track was added to the saved library.
+      - name: isrc
+        description: Spotify-reported ISRC used for reference matching.
+
+  - name: stg_spotify_track_artists
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Synthetic key composed of `track_id` and artist order.
+      - name: track_id
+        tests: [not_null]
+        description: Spotify track identifier.
+      - name: artist_id
+        tests: [not_null]
+        description: Spotify artist identifier associated with the track.
+
+  - name: stg_spotify_musicbrainz_map
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+        description: Spotify track identifier.
+      - name: recording_mbid
+        description: Matched MusicBrainz recording identifier.
+
+  - name: stg_musicbrainz_enrichment_queue
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+        description: Spotify track identifier queued for enrichment.
+      - name: isrc
+        tests: [not_null]
+        description: ISRC selected as enrichment lookup key.
+
+  - name: stg_musicbrainz_recordings
+    columns:
+      - name: recording_mbid
+        tests: [not_null, unique]
+        description: MusicBrainz recording MBID.
+
+  - name: stg_musicbrainz_recording_metadata
+    columns:
+      - name: recording_mbid
+        tests: [not_null]
+      - name: top_genre
+        description: Most-voted MusicBrainz genre for the recording.
+      - name: top_style
+        description: Most-voted tag not already in genre list.
+      - name: instrument_list_json
+        description: JSON array of performer relation attributes treated as instrument hints.
+      - name: primary_work_mbid
+        description: Linked compositional work MBID when available.
+      - name: is_cover
+        description: True when the matched recording is marked as a cover of another recording.
+
+  - name: stg_musicbrainz_artists
+    columns:
+      - name: artist_mbid
+        tests: [not_null]
+        description: MusicBrainz artist MBID.
+      - name: artist_name
+        description: MusicBrainz artist display name.
+
+  - name: stg_musicbrainz_releases
+    columns:
+      - name: release_mbid
+        tests: [not_null]
+        description: MusicBrainz release MBID.
+      - name: release_group_primary_type
+        description: Primary release-group type, such as Album or Single.
+
+  - name: stg_musicbrainz_works
+    columns:
+      - name: work_mbid
+        tests: [not_null]
+        description: MusicBrainz work/composition MBID.
+      - name: work_title
+        description: Work/composition title.
+
+  - name: stg_musicbrainz_work_writers
+    columns:
+      - name: work_mbid
+        tests: [not_null]
+        description: MusicBrainz work MBID linked to a writer relation row.
+      - name: writer_role
+        description: Relationship type (writer, composer, lyricist, librettist).

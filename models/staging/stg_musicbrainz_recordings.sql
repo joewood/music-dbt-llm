@@ -1,5 +1,6 @@
 {{ config(
     static_analysis='off',
+    tags=['post_enrichment'],
     description="""Pipeline role: Staging model that normalizes the latest MusicBrainz recording payload per MBID after enrichment results are loaded.
 Medallion layer: Silver (staging/conformance over Bronze enriched payload tables)."""
 ) }}

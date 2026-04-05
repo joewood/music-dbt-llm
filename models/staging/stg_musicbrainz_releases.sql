@@ -1,5 +1,6 @@
 {{ config(
     static_analysis='off',
+    tags=['post_enrichment'],
     description="""Pipeline role: Staging model that normalizes MusicBrainz release and release-group attributes used in downstream release rollups.
 Medallion layer: Silver (staging/conformance over Bronze enriched payload tables)."""
 ) }}

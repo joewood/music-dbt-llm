@@ -1,4 +1,5 @@
 {{ config(
+    tags=['post_enrichment'],
     description="""Pipeline role: Staging crosswalk that picks the best MusicBrainz recording candidate per Spotify track for downstream enrichment and marts.
 Medallion layer: Silver (staging/conformance over Bronze matching outputs)."""
 ) }}

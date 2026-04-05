@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: int_playlist_ready_tracks_base
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Track-grain surrogate key (same value as `track_id`).
+      - name: track_id
+        tests: [not_null]
+        description: Spotify track identifier.
+
+  - name: int_playlist_entity_context_base
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Track-grain surrogate key (same value as `track_id`).
+      - name: track_id
+        tests: [not_null]
+        description: Spotify track identifier.
+
+  - name: int_track_instrument
+    columns:
+      - name: track_id
+        tests: [not_null]
+      - name: instrument_name
+        tests: [not_null]
+        description: Lower-case instrument name with punctuation and tag-like wrappers removed.

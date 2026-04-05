@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    tags=['post_enrichment'],
     description="""Pipeline role: Intermediate enrichment bridge model that explodes and normalizes track-to-instrument relationships from recording metadata.
 Medallion layer: Silver (enrichment/intermediate layer)."""
 ) }}

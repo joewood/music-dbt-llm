@@ -1,4 +1,5 @@
 {{ config(
+    tags=['post_enrichment'],
     description="""Pipeline role: Intermediate enrichment model that assembles one-row-per-track entity context, release rollups, and writer rollups for final marts.
 Medallion layer: Silver (enrichment/intermediate layer)."""
 ) }}

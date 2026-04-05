@@ -1,6 +1,7 @@
 {{
     config(
         materialized='table',
+        tags=['post_enrichment'],
         description="""Pipeline role: Final output fact mart for auto-playlist generation with entity context, release typing, writer rollups, and scoring.
 Medallion layer: Gold (mart/output dataset layer)."""
     )

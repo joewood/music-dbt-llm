@@ -1,5 +1,6 @@
 {{ config(
     static_analysis='off',
+    tags=['post_enrichment'],
     description="""Pipeline role: Staging model that normalizes writer/composer/lyricist relationships for MusicBrainz works used by entity enrichment.
 Medallion layer: Silver (staging/conformance over Bronze enriched payload tables)."""
 ) }}

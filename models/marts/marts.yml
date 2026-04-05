@@ -1,0 +1,83 @@
+version: 2
+
+models:
+  - name: fct_playlist_ready_tracks
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Track-grain surrogate key (same value as `track_id`).
+      - name: track_id
+        tests: [not_null, unique]
+        description: Spotify track identifier.
+      - name: updated_at
+        tests: [not_null]
+        description: Latest timestamp across Spotify ingest and MusicBrainz map/recording/metadata updates.
+      - name: top_genre
+        description: Primary MusicBrainz genre for the matched recording.
+      - name: top_style
+        description: Primary style-like tag for the matched recording.
+      - name: instrument_list_json
+        description: JSON array of instrument/performance hints from MusicBrainz relations.
+      - name: primary_work_mbid
+        description: Linked compositional work MBID.
+      - name: is_cover
+        description: Whether this recording is tagged as a cover in MusicBrainz relations.
+      - name: work_writer_list_json
+        description: JSON array of songwriters/composers from MusicBrainz work relations.
+      - name: playlist_fit_score
+        description: Heuristic score to help ranking for playlist generation.
+
+  - name: fct_playlist_entity_context
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Track-grain surrogate key (same value as `track_id`).
+      - name: track_id
+        tests: [not_null, unique]
+        description: Spotify track identifier.
+      - name: updated_at
+        tests: [not_null]
+        description: Latest timestamp across Spotify and MusicBrainz entity updates.
+      - name: release_group_types
+        description: Comma-separated MusicBrainz release-group types linked to the recording.
+      - name: has_single_release
+        description: True if the recording is linked to any Single release-group type.
+      - name: has_album_release
+        description: True if the recording is linked to any Album release-group type.
+      - name: writer_names
+        description: Aggregated writer/composer/lyricist names from the linked work.
+      - name: is_cover
+        description: Whether the recording is a cover according to MusicBrainz recording relations.
+      - name: auto_playlist_score
+        description: Ranking score tuned for auto playlist generation.
+
+  - name: fct_artist_stats
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Artist-grain surrogate key (same value as `artist_id`).
+      - name: artist_id
+        tests: [not_null]
+        description: Spotify artist identifier.
+
+  - name: dim_favorite_artist
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: Favorite artist identifier selected from `fct_artist_stats`.
+
+  - name: fct_track_duplicates
+    columns:
+      - name: id
+        tests: [not_null, unique]
+        description: ISRC key for the duplicate group (same value as `isrc`).
+      - name: isrc
+        tests: [not_null, unique]
+        description: ISRC value used to identify duplicate groups.
+      - name: duplicate_occurrences
+        tests: [not_null]
+        description: Number of saved tracks in the library that share this ISRC.
+      - name: album_names
+        description: Ordered list of album names observed for the duplicate ISRC.
+      - name: album_release_dates
+        description: Ordered list of album release dates observed for the duplicate ISRC.

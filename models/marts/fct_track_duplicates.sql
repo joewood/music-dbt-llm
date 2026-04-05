@@ -12,7 +12,7 @@ with final as (
         isrc,
         array_agg(album_name order by added_at desc) as album_names,
         array_agg(album_release_date order by added_at desc) as album_release_dates,
-        count(*) as cnt
+        count(*) as duplicate_occurrences
     from {{ ref("stg_spotify_saved_tracks") }}
     group by isrc
     having count(*) > 1
@@ -22,6 +22,6 @@ select
     isrc,
     album_names,
     album_release_dates,
-    cnt
+    duplicate_occurrences
 from final
-order by cnt desc
+order by duplicate_occurrences desc

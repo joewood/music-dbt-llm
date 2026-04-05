@@ -1,4 +1,5 @@
 {{ config(
+    tags=['post_enrichment'],
     description="""Pipeline role: Intermediate enrichment model that joins Spotify and MusicBrainz staging relations into a playlist-ready base at track grain.
 Medallion layer: Silver (enrichment/intermediate layer)."""
 ) }}
