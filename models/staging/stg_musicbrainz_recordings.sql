@@ -1,4 +1,8 @@
-{{ config(static_analysis='off') }}
+{{ config(
+    static_analysis='off',
+    description="""Pipeline role: Staging model that normalizes the latest MusicBrainz recording payload per MBID after enrichment results are loaded.
+Medallion layer: Silver (staging/conformance over Bronze enriched payload tables)."""
+) }}
 
 with ranked as (
     select

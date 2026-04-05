@@ -1,6 +1,8 @@
 {{
     config(
-        materialized='table'
+        materialized='table',
+        description="""Pipeline role: Final output fact mart aggregating artist-level metrics from staged Spotify track and attribution data.
+Medallion layer: Gold (mart/output dataset layer)."""
     )
 }}
 

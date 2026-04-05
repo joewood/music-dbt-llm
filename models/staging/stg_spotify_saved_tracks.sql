@@ -1,3 +1,8 @@
+{{ config(
+    description="""Pipeline role: Staging input that standardizes raw Spotify saved-track records for downstream enrichment joins and mart projections.
+Medallion layer: Silver (staging/conformance over Bronze raw sources)."""
+) }}
+
 select
     track_id as id,
     track_id,

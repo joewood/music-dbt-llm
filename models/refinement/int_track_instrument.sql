@@ -1,4 +1,8 @@
-{{ config(materialized='table') }}
+{{ config(
+    materialized='table',
+    description="""Pipeline role: Intermediate enrichment bridge model that explodes and normalizes track-to-instrument relationships from recording metadata.
+Medallion layer: Silver (enrichment/intermediate layer)."""
+) }}
 
 with track_instruments as (
     select

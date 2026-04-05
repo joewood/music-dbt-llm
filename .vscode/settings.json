@@ -1,10 +1,10 @@
 {
-  "dbt.dbtPath": "${env:USERPROFILE}\\.local\\bin\\dbt.exe",
+  "dbt.dbtPath": "C:\\Users\\joewo\\.local\\bin\\dbt.exe",
   "dbt.profileName": "music_dbt",
   "dbt.targetName": "dev",
   "dbt.environmentVariables": {
-    "DBT_PROJECT_DIR": "${workspaceFolder}",
-    "DBT_PROFILES_DIR": "${workspaceFolder}/profiles"
+    "DBT_PROJECT_DIR": "C:\\Users\\joewo\\Documents\\music-dbt",
+    "DBT_PROFILES_DIR": "C:\\Users\\joewo\\Documents\\music-dbt\\profiles"
   },
   "[jinja-sql]": {
     "editor.defaultFormatter": "dbtLabsInc.dbt",

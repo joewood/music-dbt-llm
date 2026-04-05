@@ -1,4 +1,8 @@
-{{ config(static_analysis='off') }}
+{{ config(
+    static_analysis='off',
+    description="""Pipeline role: Staging model that normalizes writer/composer/lyricist relationships for MusicBrainz works used by entity enrichment.
+Medallion layer: Silver (staging/conformance over Bronze enriched payload tables)."""
+) }}
 
 with work_latest as (
     select

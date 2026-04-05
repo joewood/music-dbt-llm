@@ -1,3 +1,8 @@
+{{ config(
+    description="""Pipeline role: Staging input that standardizes Spotify track-to-artist attribution used by intermediate enrichment models and marts.
+Medallion layer: Silver (staging/conformance over Bronze raw sources)."""
+) }}
+
 select
     concat(track_id, ':', cast(artist_order as varchar)) as id,
     track_id,

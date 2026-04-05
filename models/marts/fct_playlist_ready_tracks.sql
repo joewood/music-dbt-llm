@@ -1,6 +1,8 @@
 {{
     config(
-        materialized='table'
+        materialized='table',
+        description="""Pipeline role: Final output fact mart for playlist ranking, projecting track-level scoring features and denormalized artist/enrichment attributes.
+Medallion layer: Gold (mart/output dataset layer)."""
     )
 }}
 

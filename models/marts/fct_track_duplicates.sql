@@ -1,6 +1,8 @@
 {{
     config(
-        materialized='table'
+        materialized='table',
+        description="""Pipeline role: Final output fact mart for duplicate diagnostics, surfacing ISRC duplicate groups for quality review and triage.
+Medallion layer: Gold (mart/output dataset layer)."""
     )
 }}
 

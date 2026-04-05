@@ -1,4 +1,8 @@
-{{ config(static_analysis='off') }}
+{{ config(
+    static_analysis='off',
+    description="""Pipeline role: Staging model that normalizes enriched recording metadata (genres, styles, instruments, work and cover context) for downstream joins.
+Medallion layer: Silver (staging/conformance over Bronze enriched payload tables)."""
+) }}
 
 with recording_latest as (
     select
