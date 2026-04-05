@@ -5,6 +5,18 @@ A dbt + DuckDB project that ingests your Spotify saved library and prepares play
 Implementation note: Python application logic now lives under `src/music_dbt`.
 Files under `scripts/` are thin CLI wrappers kept for stable command paths.
 
+## Architecture at a glance
+
+- Bronze (`raw.*`): ingestion and enrichment landing tables populated by Python/dbt operations.
+- Silver staging (`models/staging/stg_*`): source-conformed models; only staging models query `source()`.
+- Silver enrichment/intermediate (`models/refinement/int_*`): joins and enrichment rollups built from staging models.
+- Gold marts (`models/marts/fct_*`, `models/marts/dim_*`): final use-case projections for analytics and playlist workflows.
+
+Pipeline boundary for MusicBrainz enrichment:
+
+- Enrichment feeder model: `stg_musicbrainz_enrichment_queue` (tag: `enrichment_feed`)
+- Post-enrichment models: tagged `post_enrichment`
+
 ## What this project builds
 
 - `raw.spotify_saved_tracks`: saved tracks from your Spotify library.
@@ -16,6 +28,14 @@ Files under `scripts/` are thin CLI wrappers kept for stable command paths.
 - `analytics.stg_musicbrainz_recordings` (dbt staging view): latest MB recording snapshot.
 - `analytics.fct_playlist_ready_tracks` (dbt mart table): denormalized artist names and a `playlist_fit_score`.
 - `analytics.fct_artist_stats` (dbt mart table): artist-level stats across your saved tracks.
+
+## Naming conventions
+
+- Staging models: `stg_<system>_<entity>`
+- Intermediate/enrichment models: `int_<domain>_<purpose>_base`
+- Fact marts: `fct_<subject>`
+- Dimension marts: `dim_<subject>`
+- Analyses: snake_case query names under `analyses/`
 
 ## Prerequisites
 
@@ -141,7 +161,7 @@ On Windows ARM64 (for example Snapdragon X), the official installer may fail wit
 "Only x64 architecture is supported". In that case, install Fusion manually:
 
 ```powershell
-$ver = "2.0.0-preview.145"
+$ver = "2.0.0-preview.164"
 $target = "x86_64-pc-windows-msvc"
 $url = "https://public.cdn.getdbt.com/fs/cli/fs-v$ver-$target.zip"
 $tmp = Join-Path $env:TEMP ("dbt-fusion-manual-" + [guid]::NewGuid().ToString())
@@ -174,6 +194,22 @@ DBT-only operations are also available via a single run-operation:
 
 ```powershell
 & $env:DBT_CMD run-operation run_musicbrainz_enrichment_ops --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 1000, input_dir: exports/musicbrainz/results, do_export: true, do_load: true}'
+```
+
+## Quality checks
+
+Use these to validate project health end-to-end:
+
+```powershell
+& $env:DBT_CMD parse --profiles-dir profiles
+& $env:DBT_CMD build --profiles-dir profiles
+```
+
+Optional targeted checks for enrichment boundary models:
+
+```powershell
+& $env:DBT_CMD run --profiles-dir profiles --select tag:enrichment_feed
+& $env:DBT_CMD run --profiles-dir profiles --select tag:post_enrichment
 ```
 
 ## Useful queries
