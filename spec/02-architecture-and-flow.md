@@ -17,8 +17,9 @@
    - Reads queue CSV.
    - Calls MusicBrainz APIs.
    - Writes output CSV files.
-5. CSV-to-DuckDB loader
-   - `scripts/load_musicbrainz_csv_to_duckdb.py`
+5. dbt CSV-to-DuckDB loader operation
+   - `macros/load_musicbrainz_enrichment_results.sql`
+   - `dbt run-operation load_musicbrainz_enrichment_results`
    - Imports enrichment output CSV files into DuckDB raw tables.
 6. dbt staging + marts
    - Build playlist-ready and entity-aware models.
@@ -27,7 +28,7 @@
 
 - dbt owns selection logic for what needs enrichment.
 - Enrichment script owns external API retrieval and output file generation.
-- Loader script owns persistence of fetched results into DuckDB.
+- dbt run-operation macro owns persistence of fetched results into DuckDB.
 - This removes direct DB dependency from the enrichment fetch process.
 
 ## Pipeline execution order
@@ -43,5 +44,5 @@
 ## Supporting components
 
 - `scripts/spotify_auth.py`: shared Spotify PKCE callback auth helper.
-- `macros/init_raw_tables.sql`: creates required raw tables if missing via `on-run-start`.
-- `scripts/run_full_pipeline.ps1`: orchestrates full process.
+- `macros/init_raw_tables.sql`: creates required raw tables when invoked via `dbt run-operation init_raw_spotify_tables`.
+- `scripts/run_full_pipeline.py`: orchestrates full process.

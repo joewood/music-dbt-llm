@@ -13,6 +13,6 @@ select
 	first_saved_at,
 	last_saved_at
 from {{ ref('fct_artist_stats') }}
-order by saved_track_count desc, avg_popularity desc
+order by saved_track_count desc, avg_popularity desc, artist_id asc
 limit 1
 

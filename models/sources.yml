@@ -5,12 +5,23 @@ sources:
     schema: raw
     tables:
       - name: spotify_saved_tracks
+        config:
+          loaded_at_field: "try_cast(ingest_run_at as timestamp)"
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 168, period: hour}
       - name: spotify_track_artists
+        config:
+          loaded_at_field: "try_cast(ingest_run_at as timestamp)"
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 168, period: hour}
       - name: musicbrainz_recordings
       - name: spotify_musicbrainz_map
       - name: musicbrainz_isrc_candidates
       - name: musicbrainz_recording_payloads
       - name: musicbrainz_work_payloads
+      - name: musicbrainz_isrc_failures
       - name: musicbrainz_recording_metadata
       - name: musicbrainz_artists
       - name: musicbrainz_releases
@@ -19,7 +30,9 @@ sources:
 
 models:
   - name: stg_spotify_saved_tracks
-    description: Cleaned saved-track records from Spotify.
+    description: |
+      Pipeline role: Staging input that standardizes raw Spotify saved-track records for downstream joins and scoring; this model does not feed the external Python enrichment worker directly.
+      Medallion layer: Silver (staging/conformance layer built from Bronze raw sources).
     columns:
       - name: track_id
         tests: [not_null, unique]
@@ -28,7 +41,9 @@ models:
       - name: isrc
         description: Spotify-reported ISRC used for reference matching.
   - name: stg_spotify_track_artists
-    description: Cleaned Spotify track-to-artist attribution records.
+    description: |
+      Pipeline role: Staging input that standardizes track-to-artist attribution from Spotify for downstream enrichment joins and mart projections.
+      Medallion layer: Silver (staging/conformance layer built from Bronze raw sources).
     columns:
       - name: id
         tests: [not_null, unique]
@@ -37,26 +52,34 @@ models:
       - name: artist_id
         tests: [not_null]
   - name: stg_spotify_musicbrainz_map
-    description: Best MusicBrainz recording candidate for each Spotify track.
+    description: |
+      Pipeline role: Staging crosswalk of Spotify track IDs to best matched MusicBrainz recording MBIDs, consumed by intermediate enrichment models and final marts.
+      Medallion layer: Silver (staging/conformance layer over Bronze raw mapping outputs).
     columns:
       - name: track_id
         tests: [not_null, unique]
       - name: recording_mbid
         description: Matched MusicBrainz recording identifier.
   - name: stg_musicbrainz_enrichment_queue
-    description: Tracks requiring enrichment because mapping or metadata is missing.
+    description: |
+      Pipeline role: Enrichment feeder model that identifies tracks still missing MusicBrainz mapping/metadata and is exported to CSV for the Python enrichment process.
+      Medallion layer: Silver (staging/conformance layer that bridges Bronze raw data to enrichment processing).
     columns:
       - name: track_id
         tests: [not_null, unique]
       - name: isrc
         tests: [not_null]
   - name: stg_musicbrainz_recordings
-    description: Latest snapshot per MusicBrainz recording MBID.
+    description: |
+      Pipeline role: Staging model that normalizes the latest recording payload per MBID after Python enrichment results are loaded back into raw tables.
+      Medallion layer: Silver (staging/conformance layer over Bronze enriched payload tables).
     columns:
       - name: recording_mbid
         tests: [not_null, unique]
   - name: stg_musicbrainz_recording_metadata
-    description: API-derived recording metadata including genres, styles, and instrument hints.
+    description: |
+      Pipeline role: Staging model for normalized API-derived recording metadata (genres, styles, instruments, cover/work context) produced by the enrichment workflow and used by intermediate joins.
+      Medallion layer: Silver (staging/conformance layer over Bronze enriched payload tables).
     columns:
       - name: recording_mbid
         tests: [not_null]
@@ -71,49 +94,63 @@ models:
       - name: is_cover
         description: True when the matched recording is marked as a cover of another recording.
   - name: int_playlist_ready_tracks_base
-    description: Enriched playlist-ready dataset assembled from staging models.
+    description: |
+      Pipeline role: Intermediate enrichment model that joins Spotify and MusicBrainz staging models into a single track-grain base relation for playlist-focused marts.
+      Medallion layer: Silver (enrichment/intermediate layer).
     columns:
       - name: id
         tests: [not_null, unique]
       - name: track_id
         tests: [not_null]
   - name: int_playlist_entity_context_base
-    description: Enriched playlist entity context with release and writer rollups.
+    description: |
+      Pipeline role: Intermediate enrichment model that assembles entity-rich track context (release and writer rollups) used directly by downstream mart outputs.
+      Medallion layer: Silver (enrichment/intermediate layer).
     columns:
       - name: id
         tests: [not_null, unique]
       - name: track_id
         tests: [not_null]
   - name: stg_musicbrainz_artists
-    description: Artist entities seen on matched MusicBrainz recordings.
+    description: |
+      Pipeline role: Staging model for normalized MusicBrainz artist entities captured during enrichment and reused by entity-context joins.
+      Medallion layer: Silver (staging/conformance layer over Bronze enriched payload tables).
     columns:
       - name: artist_mbid
         tests: [not_null]
       - name: artist_name
         description: MusicBrainz artist display name.
   - name: stg_musicbrainz_releases
-    description: Release entities (album/single/EP/etc.) linked to matched recordings.
+    description: |
+      Pipeline role: Staging model for normalized release entities and release-group typing loaded from enrichment outputs and consumed by intermediate context models.
+      Medallion layer: Silver (staging/conformance layer over Bronze enriched payload tables).
     columns:
       - name: release_mbid
         tests: [not_null]
       - name: release_group_primary_type
         description: Primary release-group type, such as Album or Single.
   - name: stg_musicbrainz_works
-    description: Composition/work entities related to matched recordings.
+    description: |
+      Pipeline role: Staging model for normalized compositional work entities linked to matched recordings and used in writer/context enrichment.
+      Medallion layer: Silver (staging/conformance layer over Bronze enriched payload tables).
     columns:
       - name: work_mbid
         tests: [not_null]
       - name: work_title
         description: Work/composition title.
   - name: stg_musicbrainz_work_writers
-    description: Writer/composer/lyricist relationships for MusicBrainz works.
+    description: |
+      Pipeline role: Staging model for normalized writer/composer/lyricist relationships from MusicBrainz works, feeding intermediate entity-context assembly.
+      Medallion layer: Silver (staging/conformance layer over Bronze enriched payload tables).
     columns:
       - name: work_mbid
         tests: [not_null]
       - name: writer_role
         description: Relationship type (writer, composer, lyricist, librettist).
   - name: fct_playlist_ready_tracks
-    description: Fact output for playlist-focused track scoring and denormalized artist information.
+    description: |
+      Pipeline role: Final output fact mart for playlist selection, providing one row per track with denormalized artist context and playlist scoring features.
+      Medallion layer: Gold (mart/output dataset layer).
     columns:
       - name: id
         tests: [not_null, unique]
@@ -137,7 +174,9 @@ models:
       - name: playlist_fit_score
         description: Heuristic score to help ranking for playlist generation.
   - name: fct_playlist_entity_context
-    description: Fact output for one-row-per-track entity context used by auto-playlist generation.
+    description: |
+      Pipeline role: Final output fact mart for auto-playlist generation with one-row-per-track entity context, release typing, writer rollups, and scoring.
+      Medallion layer: Gold (mart/output dataset layer).
     columns:
       - name: id
         tests: [not_null, unique]
@@ -159,24 +198,32 @@ models:
       - name: auto_playlist_score
         description: Ranking score tuned for auto playlist generation.
   - name: fct_artist_stats
-    description: Fact output of artist-level statistics derived from staged Spotify data.
+    description: |
+      Pipeline role: Final output fact mart that aggregates artist-level statistics from staged/enriched track data for analysis and ranking use cases.
+      Medallion layer: Gold (mart/output dataset layer).
     columns:
       - name: id
         tests: [not_null, unique]
       - name: artist_id
         tests: [not_null]
   - name: dim_favorite_artist
-    description: Dimension-style single-row model of the current favorite artist by saved tracks.
+    description: |
+      Pipeline role: Final output dimension mart that materializes the current favorite artist summary for downstream consumption.
+      Medallion layer: Gold (mart/output dataset layer).
     columns:
       - name: id
         tests: [not_null, unique]
   - name: fct_track_duplicates
-    description: Fact-style diagnostic output for ISRC duplicate groups.
+    description: |
+      Pipeline role: Final output fact mart for duplicate diagnostics, surfacing ISRC collision groups as a quality/triage dataset.
+      Medallion layer: Gold (mart/output dataset layer).
     columns:
       - name: id
         tests: [not_null, unique]
   - name: int_track_instrument
-    description: Many-to-many mapping between track IDs and normalized instrument names.
+    description: |
+      Pipeline role: Intermediate enrichment bridge model that explodes/normalizes track-to-instrument relationships from metadata for downstream mart features.
+      Medallion layer: Silver (enrichment/intermediate layer).
     columns:
       - name: track_id
         tests: [not_null]

@@ -61,7 +61,7 @@ python scripts/enrich_musicbrainz.py --input-csv exports/musicbrainz/enrichment_
 4. Load enrichment CSV outputs into DuckDB:
 
 ```powershell
-python scripts/load_musicbrainz_csv_to_duckdb.py --input-dir exports/musicbrainz/results
+dbt run-operation load_musicbrainz_enrichment_results --args '{input_dir: exports/musicbrainz/results}'
 ```
 
 5. Build downstream models/tests:
@@ -74,7 +74,7 @@ dbt test
 ## One-command pipeline
 
 ```powershell
-.\scripts\run_full_pipeline.ps1 -MaxTracks 300
+python scripts/run_full_pipeline.py --max-tracks 300 --max-unenriched 300
 ```
 
 ## VS Code tasks

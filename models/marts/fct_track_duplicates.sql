@@ -14,6 +14,12 @@ with final as (
     from {{ ref("stg_spotify_saved_tracks") }}
     group by isrc
     having count(*) > 1
-    order by cnt desc
 )
-select * from final
+select
+    id,
+    isrc,
+    album_names,
+    album_release_dates,
+    cnt
+from final
+order by cnt desc

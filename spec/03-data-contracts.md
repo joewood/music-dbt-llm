@@ -48,7 +48,7 @@ Producer:
 - macro: `export_musicbrainz_enrichment_queue`
 - relation: `analytics.stg_musicbrainz_enrichment_queue`
 
-## enrichment output contract (enrichment script -> loader)
+## enrichment output contract (enrichment script -> dbt loader operation)
 
 Output directory default:
 
@@ -67,7 +67,7 @@ Files:
 
 Consumer:
 
-- `scripts/load_musicbrainz_csv_to_duckdb.py`
+- macro: `load_musicbrainz_enrichment_results`
 
 ## dbt consumption (staging/marts)
 

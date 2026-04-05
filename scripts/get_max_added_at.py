@@ -1,27 +1,13 @@
-import os
-
-import duckdb
-
-
-DEFAULT_DB_PATH = "warehouse/music.duckdb"
+from pathlib import Path
+import sys
 
 
-def main() -> None:
-    db_path = os.getenv("DUCKDB_PATH", DEFAULT_DB_PATH)
-    conn = None
-    try:
-        conn = duckdb.connect(db_path)
-        row = conn.execute(
-            "select cast(max(added_at) as varchar) from analytics.stg_spotify_saved_tracks"
-        ).fetchone()
-        value = row[0] if row else None
-        print(value or "")
-    except Exception:
-        # First run or missing analytics view should not fail the pipeline.
-        print("")
-    finally:
-        if conn is not None:
-            conn.close()
+ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from music_dbt.get_max_added_at import main
 
 
 if __name__ == "__main__":

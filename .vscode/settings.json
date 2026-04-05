@@ -1,10 +1,18 @@
 {
-  "dbt.dbtPath": "C:\\Users\\joewo\\.local\\bin\\dbt.exe",
-  "dbt.lspPath": "C:\\Users\\joewo\\AppData\\Roaming\\Code\\User\\globalStorage\\dbtlabsinc.dbt\\bin\\dbt-lsp.exe",
+  "dbt.dbtPath": "${env:USERPROFILE}\\.local\\bin\\dbt.exe",
   "dbt.profileName": "music_dbt",
   "dbt.targetName": "dev",
   "dbt.environmentVariables": {
-    "PATH": "C:\\Users\\joewo\\.local\\bin;${env:PATH}"
+    "DBT_PROJECT_DIR": "${workspaceFolder}",
+    "DBT_PROFILES_DIR": "${workspaceFolder}/profiles"
+  },
+  "[jinja-sql]": {
+    "editor.defaultFormatter": "dbtLabsInc.dbt",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "files.associations": {
+    "*.sql": "jinja-sql"
   },
   "sqltools.connections": [
     {

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": {
+    "adding-dbt-unit-test": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "ec3202628e5f8f47708f40c6433660ff364f9d64d28272a61b0826b4f01331cf"
+    },
+    "answering-natural-language-questions-with-dbt": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "e255b80fb97739d0cca118a315e4b3b834cd09fd66488585b0af85d52bd3100a"
+    },
+    "building-dbt-semantic-layer": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "a47918148f021a8ab691021cf95369c2e3868d6208c2530235590f768f544241"
+    },
+    "fetching-dbt-docs": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "9307671c6d29eec85e7d8b180f00d1aa99d67998c6d06c965b15ebd1b8815652"
+    },
+    "running-dbt-commands": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "78c1f05025abf16ab1b569f9ce87696e024b8f4fb7c97bb4414fed79eba20074"
+    },
+    "troubleshooting-dbt-job-errors": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "4632c53f3e80361176dc1f9238499850488d4f29a76cb3bbec82d8f755fda151"
+    },
+    "using-dbt-for-analytics-engineering": {
+      "source": "dbt-labs/dbt-agent-skills",
+      "sourceType": "github",
+      "computedHash": "ad524a8afd26dee1263989f8918276fae9f29ae8e361aef8bcfba16e70da37d1"
+    }
+  }
+}

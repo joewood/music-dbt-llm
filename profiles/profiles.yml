@@ -3,6 +3,6 @@ music_dbt:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DUCKDB_PATH', 'warehouse/music.duckdb') }}"
+      path: 'warehouse/music.duckdb'
       schema: analytics
       threads: 4

@@ -21,5 +21,5 @@ This directory captures the agreed implementation and decisions from the build-o
 - dbt builds queue model for MusicBrainz enrichment candidates.
 - dbt exports queue to CSV (`exports/musicbrainz/enrichment_queue.csv`).
 - MusicBrainz enrichment script reads CSV and writes CSV outputs only.
-- Loader script imports enrichment output CSV files into DuckDB `raw.*` MusicBrainz tables.
+- dbt run-operation imports enrichment output CSV files into DuckDB `raw.*` MusicBrainz tables.
 - dbt staging/marts consume those raw tables for playlist-ready analytics.

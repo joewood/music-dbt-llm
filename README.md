@@ -2,6 +2,9 @@
 
 A dbt + DuckDB project that ingests your Spotify saved library and prepares playlist-ready models.
 
+Implementation note: Python application logic now lives under `src/music_dbt`.
+Files under `scripts/` are thin CLI wrappers kept for stable command paths.
+
 ## What this project builds
 
 - `raw.spotify_saved_tracks`: saved tracks from your Spotify library.
@@ -68,15 +71,15 @@ The enrichment flow is now decoupled from DuckDB:
 1. dbt builds the enrichment queue table.
 2. dbt exports the queue as CSV.
 3. `enrich_musicbrainz.py` reads only CSV and writes CSV outputs.
-4. `load_musicbrainz_csv_to_duckdb.py` loads those outputs into raw DuckDB tables.
+4. `dbt run-operation load_musicbrainz_enrichment_results` loads those outputs into raw DuckDB tables.
 
 Run the steps manually:
 
 ```powershell
-dbt run --select stg_musicbrainz_enrichment_queue
-dbt run-operation export_musicbrainz_enrichment_queue --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 1000}'
+& $env:DBT_CMD run --select stg_musicbrainz_enrichment_queue
+& $env:DBT_CMD run-operation export_musicbrainz_enrichment_queue --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 1000}'
 python scripts/enrich_musicbrainz.py --input-csv exports/musicbrainz/enrichment_queue.csv --output-dir exports/musicbrainz/results --max-unenriched 1000
-python scripts/load_musicbrainz_csv_to_duckdb.py --input-dir exports/musicbrainz/results
+& $env:DBT_CMD run-operation load_musicbrainz_enrichment_results --args '{input_dir: exports/musicbrainz/results}'
 ```
 
 The enrichment script only calls the API for currently queued tracks and processes
@@ -98,9 +101,9 @@ Additional MusicBrainz entity tables are also populated during enrichment:
 Optional sampled enrichment:
 
 ```powershell
-dbt run-operation export_musicbrainz_enrichment_queue --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 250}'
+& $env:DBT_CMD run-operation export_musicbrainz_enrichment_queue --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 250}'
 python scripts/enrich_musicbrainz.py --input-csv exports/musicbrainz/enrichment_queue.csv --output-dir exports/musicbrainz/results --max-unenriched 250
-python scripts/load_musicbrainz_csv_to_duckdb.py --input-dir exports/musicbrainz/results
+& $env:DBT_CMD run-operation load_musicbrainz_enrichment_results --args '{input_dir: exports/musicbrainz/results}'
 ```
 
 CSV outputs produced by enrichment:
@@ -115,10 +118,23 @@ CSV outputs produced by enrichment:
 Fusion note: this project now uses the dbt Fusion CLI (`dbt`/`dbtf`) instead of
 the Python `dbt-core` package.
 
+On Windows, pin an explicit Fusion command in your current shell to avoid
+accidentally invoking a `dbt-core` executable from a virtualenv:
+
 ```powershell
-dbt debug --profiles-dir profiles
-dbt run --profiles-dir profiles
-dbt test --profiles-dir profiles
+$env:DBT_CMD = Join-Path $env:USERPROFILE '.local\\bin\\dbt.exe'
+```
+
+Initialize raw schema/tables once (or whenever you need to re-bootstrap):
+
+```powershell
+& $env:DBT_CMD run-operation init_raw_spotify_tables --profiles-dir profiles
+```
+
+```powershell
+& $env:DBT_CMD debug --profiles-dir profiles
+& $env:DBT_CMD run --profiles-dir profiles
+& $env:DBT_CMD test --profiles-dir profiles
 ```
 
 On Windows ARM64 (for example Snapdragon X), the official installer may fail with
@@ -142,27 +158,27 @@ Copy-Item -Path $exe.FullName -Destination (Join-Path $dest "dbt.exe") -Force
 Or run ingestion + enrichment + dbt in one command:
 
 ```powershell
-.\scripts\run_full_pipeline.ps1
+python scripts/run_full_pipeline.py
 ```
+
+`run_full_pipeline.py` auto-detects Fusion and also honors `DBT_CMD`
+(or `--dbt-cmd`) if you want to force a specific executable.
 
 Optional sampled run:
 
 ```powershell
-.\scripts\run_full_pipeline.ps1 -MaxTracks 300
+python scripts/run_full_pipeline.py --max-tracks 300 --max-unenriched 300
 ```
 
-Bash equivalent (Linux/macOS/Git Bash):
+DBT-only operations are also available via a single run-operation:
 
-```bash
-./scripts/run_full_pipeline.sh 300 1000
+```powershell
+& $env:DBT_CMD run-operation run_musicbrainz_enrichment_ops --args '{output_path: exports/musicbrainz/enrichment_queue.csv, max_unenriched: 1000, input_dir: exports/musicbrainz/results, do_export: true, do_load: true}'
 ```
-
-Arguments are:
-
-- first: max Spotify tracks to ingest (`0` means no max)
-- second: max unenriched ISRC values for MusicBrainz enrichment
 
 ## Useful queries
+
+
 
 Top playlist candidates:
 
